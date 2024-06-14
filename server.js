@@ -6,14 +6,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Убедитесь, что Express обслуживает статические файлы из папки public
-app.use(express.static('public'));
+app.use(express.static('public')); // Убедитесь, что файлы находятся в папке public
 
 io.on('connection', (socket) => {
   console.log('Пользователь подключился');
 
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+  socket.on('chat message', ({ nickname, msg }) => {
+    io.emit('chat message', { nickname, msg });
   });
 
   socket.on('disconnect', () => {

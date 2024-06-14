@@ -9,6 +9,7 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f0f0f0;
       display: flex;
       flex-direction: column;
       height: 100vh;
@@ -17,6 +18,8 @@
       flex: 1;
       padding: 10px;
       overflow-y: auto;
+      border: 1px solid #ddd;
+      background-color: #fff;
     }
     #message {
       padding: 10px;
@@ -24,10 +27,21 @@
     #send {
       padding: 10px;
     }
+    .chat-message {
+      margin-bottom: 10px;
+      padding: 5px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+    }
+    .nickname {
+      margin-right: 5px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div id="chat"></div>
+  <input id="nickname" type="text" placeholder="Введите ваш никнейм...">
   <input id="message" type="text" placeholder="Введите сообщение...">
   <button id="send">Отправить</button>
 
@@ -36,20 +50,29 @@
     const socket = io();
 
     const chat = document.getElementById('chat');
+    const nicknameInput = document.getElementById('nickname');
     const messageInput = document.getElementById('message');
     const sendButton = document.getElementById('send');
 
     sendButton.addEventListener('click', () => {
+      const nickname = nicknameInput.value.trim();
       const msg = messageInput.value.trim();
-      if (msg) {
-        socket.emit('chat message', msg);
+      if (nickname && msg) {
+        socket.emit('chat message', { nickname, msg });
         messageInput.value = '';
       }
     });
 
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', ({ nickname, msg }) => {
       const item = document.createElement('div');
-      item.textContent = msg;
+      item.className = 'chat-message';
+      const nicknameSpan = document.createElement('span');
+      nicknameSpan.className = 'nickname';
+      nicknameSpan.textContent = nickname + ": ";
+      item.appendChild(nicknameSpan);
+      const msgSpan = document.createElement('span');
+      msgSpan.textContent = msg;
+      item.appendChild(msgSpan);
       chat.appendChild(item);
       chat.scrollTop = chat.scrollHeight;
     });
