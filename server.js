@@ -1,26 +1,27 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const socketIO = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIO(server);
 
-app.use(express.static('public')); // Убедитесь, что файлы находятся в папке public
+app.use(express.static('public'));
 
 io.on('connection', (socket) => {
-  console.log('Пользователь подключился');
+  console.log('A user connected');
 
-  socket.on('chat message', ({ nickname, msg }) => {
-    io.emit('chat message', { nickname, msg });
+  socket.on('chat message', ({ username, message }) => {
+    console.log(`${username}: ${message}`);
+    io.emit('chat message', { username, message });
   });
 
   socket.on('disconnect', () => {
-    console.log('Пользователь отключился');
+    console.log('User disconnected');
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Сервер слушает порт ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

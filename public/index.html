@@ -1,81 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Простой чат</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat App</title>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  function askUsername() {
+    const username = prompt("Please enter your username for the chat:");
+    if (username) {
+      localStorage.setItem('username', username);
+      enableInput();
+    } else {
+      askUsername();
     }
-    #chat {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      background-color: #fff;
+  }
+
+  function enableInput() {
+    document.getElementById('message-input').disabled = false;
+    document.getElementById('send-button').disabled = false;
+  }
+
+  if (!localStorage.getItem('username')) {
+    askUsername();
+  } else {
+    enableInput();
+  }
+
+  const messageInput = document.getElementById('message-input');
+  const sendButton = document.getElementById('send-button');
+  const messagesList = document.getElementById('messages');
+
+  sendButton.addEventListener('click', () => {
+    const message = messageInput.value.trim();
+    const username = localStorage.getItem('username');
+    if (message) {
+      socket.emit('chat message', { username, message });
+      messageInput.value = '';
     }
-    #message {
-      padding: 10px;
-    }
-    #send {
-      padding: 10px;
-    }
-    .chat-message {
-      margin-bottom: 10px;
-      padding: 5px;
-      background-color: #e0e0e0;
-      border-radius: 5px;
-    }
-    .nickname {
-      margin-right: 5px;
-      font-weight: bold;
-    }
-  </style>
+  });
+
+  socket.on('chat message', ({ username, message }) => {
+    const item = document.createElement('li');
+    item.textContent = `${username}: ${message}`;
+    messagesList.appendChild(item);
+  });
+</script>
 </head>
 <body>
-  <div id="chat"></div>
-  <input id="nickname" type="text" placeholder="Введите ваш никнейм...">
-  <input id="message" type="text" placeholder="Введите сообщение...">
-  <button id="send">Отправить</button>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-
-    const chat = document.getElementById('chat');
-    const nicknameInput = document.getElementById('nickname');
-    const messageInput = document.getElementById('message');
-    const sendButton = document.getElementById('send');
-
-    sendButton.addEventListener('click', () => {
-      const nickname = nicknameInput.value.trim();
-      const msg = messageInput.value.trim();
-      if (nickname && msg) {
-        socket.emit('chat message', { nickname, msg });
-        messageInput.value = '';
-      }
-    });
-
-    socket.on('chat message', ({ nickname, msg }) => {
-      const item = document.createElement('div');
-      item.className = 'chat-message';
-      const nicknameSpan = document.createElement('span');
-      nicknameSpan.className = 'nickname';
-      nicknameSpan.textContent = nickname + ": ";
-      item.appendChild(nicknameSpan);
-      const msgSpan = document.createElement('span');
-      msgSpan.textContent = msg;
-      item.appendChild(msgSpan);
-      chat.appendChild(item);
-      chat.scrollTop = chat.scrollHeight;
-    });
-  </script>
+<div id="chat-container">
+  <ul id="messages"></ul>
+</div>
+<input type="text" id="message-input" placeholder="Type your message here..." disabled>
+<button id="send-button" disabled>Send</button>
 </body>
 </html>
