@@ -12,6 +12,7 @@
     const username = prompt("Please enter your username for the chat:");
     if (username) {
       localStorage.setItem('username', username);
+      socket.emit('new user', username); // Уведомляем сервер о новом пользователе
       enableInput();
     } else {
       askUsername();
@@ -42,20 +43,24 @@
     }
   });
 
-  socket.on('chat message', ({ username, message }) => {
+  socket.on('chat message', ({ username, message, time }) => {
     const item = document.createElement('li');
-    
-    // Проверяем никнейм и устанавливаем цвет сообщения
-    if (username.toLowerCase() === 'эмиль') {
-      item.style.color = 'green';
-    } else if (username.toLowerCase() === 'гуля') {
-      item.style.color = 'purple';
-    }
-    
-    item.textContent = `${username}: ${message}`;
+    item.innerHTML = `<strong>${username}</strong>: ${message} <span class="time">${time}</span>`;
     messagesList.appendChild(item);
   });
+
+  // Обработчик для статуса пользователя
+  socket.on('user status', ({ username, status }) => {
+    console.log(`${username} is now ${status}`);
+    // Здесь можно добавить логику для отображения статуса пользователя
+  });
 </script>
+<style>
+  .time {
+    font-size: 0.8em;
+    color: #777;
+  }
+</style>
 </head>
 <body>
 <div id="chat-container">
