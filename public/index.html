@@ -44,6 +44,14 @@
 
   socket.on('chat message', ({ username, message }) => {
     const item = document.createElement('li');
+    
+    // Проверяем никнейм и устанавливаем цвет сообщения
+    if (username.toLowerCase() === 'эмиль') {
+      item.style.color = 'green';
+    } else if (username.toLowerCase() === 'гуля') {
+      item.style.color = 'purple';
+    }
+    
     item.textContent = `${username}: ${message}`;
     messagesList.appendChild(item);
   });
