@@ -8,28 +8,29 @@
 <script>
   const socket = io();
 
-  function askUsername() {
-    const username = prompt("Please enter your username for the chat:");
-    if (username) {
-      localStorage.setItem('username', username);
-      socket.emit('new user', username); // Уведомляем сервер о новом пользователе
-      enableInput();
-    } else {
-      askUsername();
-    }
-  }
+  const socket = io();
 
-  function enableInput() {
-    document.getElementById('message-input').disabled = false;
-    document.getElementById('send-button').disabled = false;
-  }
-
-  if (!localStorage.getItem('username')) {
-    askUsername();
+function askUsername() {
+  const username = prompt("Please enter your username for the chat:");
+  if (username) {
+    localStorage.setItem('username', username);
+    socket.emit('new user', username);
+    enableInput(); // Вызываем функцию для активации поля ввода и кнопки
   } else {
-    enableInput();
+    askUsername();
   }
+}
 
+function enableInput() {
+  document.getElementById('message-input').disabled = false;
+  document.getElementById('send-button').disabled = false;
+}
+
+if (!localStorage.getItem('username')) {
+  askUsername();
+} else {
+  enableInput(); // Если никнейм уже сохранен, активируем поле ввода и кнопку
+}
   const messageInput = document.getElementById('message-input');
   const sendButton = document.getElementById('send-button');
   const messagesList = document.getElementById('messages');
@@ -43,16 +44,30 @@
     }
   });
 
-  socket.on('chat message', ({ username, message, time }) => {
+  socket.on('chat message', ({ username, message, time, id }) => {
     const item = document.createElement('li');
     item.innerHTML = `<strong>${username}</strong>: ${message} <span class="time">${time}</span>`;
+    if (id === socket.id) { // Проверяем, является ли сообщение нашим
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.onclick = () => {
+        socket.emit('delete message', item.id); // Отправляем запрос на удаление сообщения
+      };
+      item.appendChild(deleteButton);
+    }
+    item.id = `message-${id}-${Date.now()}`; // Уникальный идентификатор для сообщения
     messagesList.appendChild(item);
   });
 
-  // Обработчик для статуса пользователя
+  socket.on('delete message', (messageId) => {
+    const messageElement = document.getElementById(messageId);
+    if (messageElement) {
+      messageElement.remove(); // Удаляем сообщение из DOM
+    }
+  });
+
   socket.on('user status', ({ username, status }) => {
     console.log(`${username} is now ${status}`);
-    // Здесь можно добавить логику для отображения статуса пользователя
   });
 </script>
 <style>
